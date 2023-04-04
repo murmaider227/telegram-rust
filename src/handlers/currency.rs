@@ -17,6 +17,10 @@ pub async fn register_currency_handlers(bot: Bot, db: DatabaseManager) {
                 .endpoint(simple_commands_handler),
         );
 
+    bot.set_my_commands(SimpleCommand::bot_commands())
+        .await
+        .expect("failed setting commands");
+
     Dispatcher::builder(bot, handler)
         // Here you specify initial dependencies that all handlers will receive; they can be
         // database connections, configurations, and other auxiliary arguments. It is similar to
