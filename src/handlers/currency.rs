@@ -52,6 +52,8 @@ enum SimpleCommand {
     Me,
     #[command(description = "add currency")]
     AddCurrency(String),
+    #[command(description = "remove currency")]
+    RemoveCurrency(String),
 }
 
 async fn simple_commands_handler(
@@ -94,6 +96,13 @@ async fn simple_commands_handler(
                 .await
                 .expect("Error add currency");
             bot.send_message(msg.chat.id, format!("добавили {:?}", currency))
+                .await?;
+        }
+        SimpleCommand::RemoveCurrency(currency) => {
+            cfg.remove_user_currency(msg.from().unwrap().id.0 as i64, currency.clone())
+                .await
+                .expect("Error add currency");
+            bot.send_message(msg.chat.id, format!("удалили {:?}", currency))
                 .await?;
         }
     };

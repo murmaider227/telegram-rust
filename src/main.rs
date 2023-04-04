@@ -37,7 +37,6 @@ async fn connect_to_db() -> DatabaseManager {
     let db_name: String = var("db_name").expect("db_name must be set");
 
     let uri = format!("mongodb://{}:{}@{}:27017", db_user, db_password, db_host);
-    info!("DB_URL: {}", uri);
 
     DatabaseManager::new(&uri, &db_name)
         .await
