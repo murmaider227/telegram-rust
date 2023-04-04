@@ -2,7 +2,10 @@ use crate::models::user::User;
 use reqwest::Url;
 use std::env;
 
-pub(crate) async fn price_all_command(user: User) -> String {
+pub async fn price_all_command(user: User) -> String {
+    if user.currency.is_empty() {
+        return "You don't have any currency, type /addcurency curency-name".to_string();
+    }
     let result = get_currency_price_multi(user.currency).await;
     match result {
         Ok(res) => res,

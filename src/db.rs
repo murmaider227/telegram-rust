@@ -65,6 +65,7 @@ impl DatabaseManager {
         let collection: Collection<User> = self.db.collection("user");
         let mut user = self.get_user(user_id).await?;
         user.currency.push(currency);
+        user.currency.dedup();
         let user_doc = self.update_user_doc(user).await;
         //collection.update_one(doc! {"user_id": user_id}, user_doc, None).await?;
         collection
