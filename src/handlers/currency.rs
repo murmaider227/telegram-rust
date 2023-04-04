@@ -1,5 +1,6 @@
 use crate::commands::chart::chart_command;
 use crate::commands::price::price_command;
+use crate::commands::price_all::price_all_command;
 use crate::commands::start::start_command;
 use crate::db::DatabaseManager;
 use teloxide::{prelude::*, types::Update, utils::command::BotCommands};
@@ -54,6 +55,8 @@ enum SimpleCommand {
     AddCurrency(String),
     #[command(description = "remove currency")]
     RemoveCurrency(String),
+    #[command(description = "print all user currencies")]
+    PriceAll,
 }
 
 async fn simple_commands_handler(
@@ -104,6 +107,14 @@ async fn simple_commands_handler(
                 .expect("Error add currency");
             bot.send_message(msg.chat.id, format!("удалили {:?}", currency))
                 .await?;
+        }
+        SimpleCommand::PriceAll => {
+            let user = cfg
+                .get_user(msg.from().unwrap().id.0 as i64)
+                .await
+                .expect("Error get user");
+            let result = price_all_command(user).await;
+            bot.send_message(msg.chat.id, result).await?;
         }
     };
 
