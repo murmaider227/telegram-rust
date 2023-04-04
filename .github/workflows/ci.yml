@@ -11,6 +11,8 @@ jobs:
   test:
     name: Test Suite
     runs-on: ubuntu-latest
+    env:
+      CMC_TOKEN: ${{ secrets.CMC_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
