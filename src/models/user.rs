@@ -1,5 +1,8 @@
+use crate::db::DatabaseManager;
+use log::debug;
 use mongodb::bson;
 use serde::{Deserialize, Serialize};
+use std::error::Error;
 
 /// User model
 ///
@@ -16,7 +19,7 @@ use serde::{Deserialize, Serialize};
 /// * `new` - Create new user
 ///
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct User {
     pub user_id: i64,
     pub username: String,
@@ -43,5 +46,14 @@ impl User {
             created_at: bson::DateTime::now(),
             updated_at: bson::DateTime::now(),
         }
+    }
+
+    pub async fn save(&self, db: DatabaseManager) -> Result<(), Box<dyn Error>> {
+        let res = db.insert_user(self.clone()).await;
+        match res {
+            Ok(_) => (),
+            Err(_) => debug!("user already exists"),
+        }
+        Ok(())
     }
 }

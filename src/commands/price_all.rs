@@ -1,8 +1,10 @@
 use crate::models::user::User;
+use log::info;
 use reqwest::Url;
 use std::env;
 
 pub async fn price_all_command(user: User) -> String {
+    info!("price_all_command");
     if user.currency.is_empty() {
         return "You don't have any currency, type /addcurency curency-name".to_string();
     }

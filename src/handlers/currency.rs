@@ -1,7 +1,11 @@
-use crate::commands::chart::chart_command;
-use crate::commands::price::price_command;
-use crate::commands::price_all::price_all_command;
-use crate::commands::start::start_command;
+use crate::commands::send_all::{send_all_command, send_message_at_specific_time};
+use crate::commands::{
+    chart::chart_command,
+    currency::{add_currency_command, remove_currency_command},
+    price::price_command,
+    price_all::price_all_command,
+    start::start_command,
+};
 use crate::db::DatabaseManager;
 use teloxide::{prelude::*, types::Update, utils::command::BotCommands};
 
@@ -15,11 +19,18 @@ pub async fn register_currency_handlers(bot: Bot, db: DatabaseManager) {
                 .filter_command::<SimpleCommand>()
                 // If a command parsing fails, this handler will not be executed.
                 .endpoint(simple_commands_handler),
+        )
+        .branch(
+            dptree::entry()
+                .filter_command::<AdminCommand>()
+                .endpoint(admin_commands_handler),
         );
 
     bot.set_my_commands(SimpleCommand::bot_commands())
         .await
         .expect("failed setting commands");
+
+    send_message_at_specific_time(bot.clone(), db.clone()).await;
 
     Dispatcher::builder(bot, handler)
         // Here you specify initial dependencies that all handlers will receive; they can be
@@ -99,18 +110,15 @@ async fn simple_commands_handler(
                 .await?;
         }
         SimpleCommand::AddCurrency(currency) => {
-            cfg.change_user_currency(msg.from().unwrap().id.0 as i64, currency.clone())
-                .await
-                .expect("Error add currency");
-            bot.send_message(msg.chat.id, format!("добавили {:?}", currency))
-                .await?;
+            let res =
+                add_currency_command(msg.from().unwrap().id.0 as i64, currency, cfg.clone()).await;
+            bot.send_message(msg.chat.id, res).await?;
         }
         SimpleCommand::RemoveCurrency(currency) => {
-            cfg.remove_user_currency(msg.from().unwrap().id.0 as i64, currency.clone())
-                .await
-                .expect("Error add currency");
-            bot.send_message(msg.chat.id, format!("удалили {:?}", currency))
-                .await?;
+            let res =
+                remove_currency_command(msg.from().unwrap().id.0 as i64, currency, cfg.clone())
+                    .await;
+            bot.send_message(msg.chat.id, res).await?;
         }
         SimpleCommand::PriceAll => {
             let user = cfg
@@ -122,5 +130,32 @@ async fn simple_commands_handler(
         }
     };
 
+    Ok(())
+}
+
+#[derive(BotCommands, Clone)]
+#[command(rename_rule = "lowercase", description = "Admin commands")]
+enum AdminCommand {
+    #[command(description = "shows this message.")]
+    Sendall(String),
+}
+
+async fn admin_commands_handler(
+    cfg: DatabaseManager,
+    bot: Bot,
+    // me: teloxide::types::Me,
+    // msg: Message,
+    cmd: AdminCommand,
+) -> Result<(), teloxide::RequestError> {
+    match cmd {
+        AdminCommand::Sendall(text) => {
+            // let users = cfg.get_all_users().await.unwrap();
+            // for user in users {
+            //     bot.send_message(UserId(user.user_id as u64), text.clone())
+            //         .await?;
+            // }
+            send_all_command(cfg, bot.clone(), text).await;
+        }
+    }
     Ok(())
 }
