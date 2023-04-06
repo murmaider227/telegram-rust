@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"telegram_rust":[["impl&lt;'de&gt; <a class=\"trait\" href=\"https://docs.rs/serde/1.0.159/serde/de/trait.Deserialize.html\" title=\"trait serde::de::Deserialize\">Deserialize</a>&lt;'de&gt; for <a class=\"struct\" href=\"telegram_rust/models/user/struct.User.html\" title=\"struct telegram_rust::models::user::User\">User</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
