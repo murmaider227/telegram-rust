@@ -7,6 +7,7 @@ use crate::commands::{
     start::start_command,
 };
 use crate::db::DatabaseManager;
+use crate::tools::parse_text::parse_text;
 use teloxide::{prelude::*, types::Update, utils::command::BotCommands};
 
 pub async fn register_currency_handlers(bot: Bot, db: DatabaseManager) {
@@ -24,7 +25,8 @@ pub async fn register_currency_handlers(bot: Bot, db: DatabaseManager) {
             dptree::entry()
                 .filter_command::<AdminCommand>()
                 .endpoint(admin_commands_handler),
-        );
+        )
+        .branch(dptree::entry().endpoint(messages_handler));
 
     bot.set_my_commands(SimpleCommand::bot_commands())
         .await
@@ -156,6 +158,22 @@ async fn admin_commands_handler(
             // }
             send_all_command(cfg, bot.clone(), text).await;
         }
+    }
+    Ok(())
+}
+
+async fn messages_handler(
+    // cfg: DatabaseManager,
+    bot: Bot,
+    // me: teloxide::types::Me,
+    msg: Message,
+) -> Result<(), teloxide::RequestError> {
+    if let Some(text) = msg.text() {
+        let res = parse_text(text).await;
+        if res.is_empty() {
+            return Ok(());
+        }
+        bot.send_message(msg.chat.id, res).await?;
     }
     Ok(())
 }

@@ -21,10 +21,15 @@ use std::error::Error;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct User {
+    /// User id
     pub user_id: i64,
+    /// User username
     pub username: String,
+    /// User currency
     pub currency: Vec<String>,
+    /// User created at
     pub created_at: bson::DateTime,
+    /// User updated at
     pub updated_at: bson::DateTime,
 }
 

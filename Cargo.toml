@@ -1,6 +1,6 @@
 [package]
 name = "telegram-rust"
-version = "0.1.0"
+version = "1.0.1"
 edition = "2021"
 description = "Telegram bot for Rust"
 repository = "https://github.com/murmaider227/telegram-rust"
@@ -24,3 +24,4 @@ env_logger = "0.10.0"
 chrono-tz = "0.8.1"
 mongodb = { version = "2.4.0", features = ["bson-chrono-0_4"] }
 futures = "0.3"
+regex="1.5.4"

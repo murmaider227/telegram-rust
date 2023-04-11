@@ -3,6 +3,8 @@ use log::info;
 use reqwest::Url;
 use std::env;
 
+/// /priceall command handler
+/// send info about all user currency
 pub async fn price_all_command(user: User) -> String {
     info!("price_all_command");
     if user.currency.is_empty() {

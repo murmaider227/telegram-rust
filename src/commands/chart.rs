@@ -7,25 +7,9 @@ use teloxide::prelude::*;
 use teloxide::types::InputFile;
 use tokio::spawn;
 
+/// /chart command handler
+/// Sends a chart of the specified currency
 pub async fn chart_command(bot: Bot, msg: Message, currency: String) {
-    // let res = send_chart(bot.clone(), msg.clone(), currency.clone()).await;
-    //
-    // // print message if res return error which contain text fetching price for
-    // if res.is_err() {
-    //     let err = res.unwrap_err();
-    //     let err_str = err.to_string();
-    //     if err_str.contains("Error fetching price for") {
-    //         spawn(async move {
-    //             // Дожидаемся завершения отправки фото
-    //             if let Err(err) = bot
-    //                 .send_message(msg.chat.id, format!("price for {} not found", currency))
-    //                 .await
-    //             {
-    //                 println!("Error sending photo: {}", err);
-    //             }
-    //         });
-    //     }
-
     spawn(async move {
         // Дожидаемся завершения отправки фото
         if let Err(err) = send_chart(bot.clone(), msg.clone(), currency.clone()).await {

@@ -6,7 +6,7 @@ use mongodb::bson::doc;
 use teloxide::prelude::*;
 use tokio::time::{self, Duration};
 
-pub async fn send_all_currency(cfg: DatabaseManager, bot: Bot, _text: String) {
+async fn send_all_currency(cfg: DatabaseManager, bot: Bot, _text: String) {
     let filter = Some(doc! {
         "currency.0": { "$exists": true },
     });
@@ -24,7 +24,7 @@ pub async fn send_all_currency(cfg: DatabaseManager, bot: Bot, _text: String) {
         //     .await?;
     }
 }
-
+/// Send all users a message
 pub async fn send_all_command(cfg: DatabaseManager, bot: Bot, text: String) {
     let users = cfg.get_all_users(None).await.unwrap();
 

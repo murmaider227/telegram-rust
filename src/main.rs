@@ -6,6 +6,7 @@ mod db;
 mod handlers;
 mod models;
 mod tests;
+mod tools;
 
 use flexi_logger::{colored_opt_format, opt_format, FileSpec, Logger};
 
