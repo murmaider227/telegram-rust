@@ -8,6 +8,7 @@ use crate::commands::{
 };
 use crate::db::DatabaseManager;
 use crate::tools::parse_text::parse_text;
+use log::debug;
 use teloxide::{prelude::*, types::Update, utils::command::BotCommands};
 
 pub async fn register_currency_handlers(bot: Bot, db: DatabaseManager) {
@@ -170,7 +171,8 @@ async fn messages_handler(
 ) -> Result<(), teloxide::RequestError> {
     if let Some(text) = msg.text() {
         let res = parse_text(text).await;
-        if res.is_empty() {
+        debug!("res: {:?}", res);
+        if res.len() <= 1 {
             return Ok(());
         }
         bot.send_message(msg.chat.id, res).await?;
