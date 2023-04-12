@@ -2,12 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.1] - 2023-04-11
+## [1.0.1] - 2023-04-12
 
 ### Features
 
 - Sending message to all users at specific time
 - Add parsing text for all currency in
+- Add parsing text for all twitter links
+
+### Testing
+
+- Add tests for twitter and currency parse
 
 ## [1.0.0] - 2023-04-05
 
