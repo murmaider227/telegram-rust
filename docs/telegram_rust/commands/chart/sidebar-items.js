@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["chart_command","/chart command handler Sends a chart of the specified currency"],["get_chart",""],["send_chart",""],["send_chart_file",""]]};

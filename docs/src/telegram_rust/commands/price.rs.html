@@ -88,10 +88,8 @@
 <a href="#88" id="88">88</a>
 <a href="#89" id="89">89</a>
 <a href="#90" id="90">90</a>
-<a href="#91" id="91">91</a>
 </pre><pre class="rust"><code><span class="kw">use </span>reqwest::Url;
 <span class="kw">use </span>std::env;
-
 <span class="kw">pub async fn </span>price_command(value: f64, currency: String) -&gt; String {
     <span class="kw">let </span>result = get_currency_price(value, currency).<span class="kw">await</span>;
     <span class="kw">match </span>result {

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["add_currency_command","Add currency command to user currency list in db"],["remove_currency_command","Remove currency command from user currency list in db"]]};

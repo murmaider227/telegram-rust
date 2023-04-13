@@ -56,7 +56,7 @@
     <span class="kw">let </span>save = cfg.insert_user(res).<span class="kw">await</span>;
     <span class="kw">match </span>save {
         <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; (),
-        <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="macro">debug!</span>(<span class="string">&quot;user already exists&quot;</span>),
+        <span class="prelude-val">Err</span>(err) =&gt; <span class="macro">debug!</span>(<span class="string">&quot;user already exists: {}&quot;</span>, err),
     }
     <span class="string">&quot;Hello with start&quot;</span>.to_string()
 }

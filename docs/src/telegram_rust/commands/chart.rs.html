@@ -156,13 +156,6 @@
 <a href="#156" id="156">156</a>
 <a href="#157" id="157">157</a>
 <a href="#158" id="158">158</a>
-<a href="#159" id="159">159</a>
-<a href="#160" id="160">160</a>
-<a href="#161" id="161">161</a>
-<a href="#162" id="162">162</a>
-<a href="#163" id="163">163</a>
-<a href="#164" id="164">164</a>
-<a href="#165" id="165">165</a>
 </pre><pre class="rust"><code><span class="kw">use </span>chrono::{DateTime, TimeZone};
 <span class="kw">use </span>chrono_tz::Tz;
 <span class="kw">use </span>plotters::prelude::<span class="kw-2">*</span>;
@@ -172,26 +165,10 @@
 <span class="kw">use </span>teloxide::types::InputFile;
 <span class="kw">use </span>tokio::spawn;
 
-<span class="kw">pub async fn </span>chart_command(bot: Bot, msg: Message, currency: String) {
-    <span class="comment">// let res = send_chart(bot.clone(), msg.clone(), currency.clone()).await;
-    //
-    // // print message if res return error which contain text fetching price for
-    // if res.is_err() {
-    //     let err = res.unwrap_err();
-    //     let err_str = err.to_string();
-    //     if err_str.contains(&quot;Error fetching price for&quot;) {
-    //         spawn(async move {
-    //             // Дожидаемся завершения отправки фото
-    //             if let Err(err) = bot
-    //                 .send_message(msg.chat.id, format!(&quot;price for {} not found&quot;, currency))
-    //                 .await
-    //             {
-    //                 println!(&quot;Error sending photo: {}&quot;, err);
-    //             }
-    //         });
-    //     }
-
-    </span>spawn(<span class="kw">async move </span>{
+<span class="doccomment">/// /chart command handler
+/// Sends a chart of the specified currency
+</span><span class="kw">pub async fn </span>chart_command(bot: Bot, msg: Message, currency: String) {
+    spawn(<span class="kw">async move </span>{
         <span class="comment">// Дожидаемся завершения отправки фото
         </span><span class="kw">if let </span><span class="prelude-val">Err</span>(err) = send_chart(bot.clone(), msg.clone(), currency.clone()).<span class="kw">await </span>{
             <span class="macro">println!</span>(<span class="string">&quot;Error sending photo: {}&quot;</span>, err);
@@ -233,8 +210,8 @@
 
     <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">vec!</span>[];
     <span class="kw">for </span>kline <span class="kw">in </span>response_json {
-        <span class="kw">let </span>close_value = kline[<span class="number">4</span>].as_str().unwrap();
-        <span class="kw">let </span>close = close_value.parse::&lt;f64&gt;().unwrap();
+        <span class="kw">let </span>close_value = kline[<span class="number">4</span>].as_str().ok_or(<span class="string">&quot;Failed to convert to str&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>close = close_value.parse::&lt;f64&gt;()<span class="question-mark">?</span>;
         data.push(close);
     }
 
@@ -253,7 +230,7 @@
     <span class="kw">let </span>root = BitMapBackend::new(<span class="kw-2">&amp;</span>filename, (<span class="number">640</span>, <span class="number">480</span>)).into_drawing_area();
     root.fill(<span class="kw-2">&amp;</span>WHITE)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>timezone: Tz = <span class="string">&quot;Europe/Kiev&quot;</span>.parse().unwrap();
+    <span class="kw">let </span>timezone: Tz = <span class="string">&quot;Europe/Kiev&quot;</span>.parse()<span class="question-mark">?</span>;
 
     <span class="kw">let </span>last_day = chrono::Utc::now() - chrono::Duration::days(<span class="number">1</span>);
 
@@ -262,7 +239,8 @@
     <span class="kw">for </span>(i, <span class="kw">_</span>) <span class="kw">in </span>data.iter().enumerate() {
         <span class="kw">if </span>i % <span class="number">2 </span>== <span class="number">0 </span>{
             <span class="kw">let </span>timestamp = last_day.timestamp() <span class="kw">as </span>u32 + i <span class="kw">as </span>u32 * <span class="number">60 </span>* <span class="number">60</span>;
-            <span class="kw">let </span>naive_dt = chrono::NaiveDateTime::from_timestamp_opt(timestamp <span class="kw">as </span>i64, <span class="number">0</span>).unwrap();
+            <span class="kw">let </span>naive_dt = chrono::NaiveDateTime::from_timestamp_opt(timestamp <span class="kw">as </span>i64, <span class="number">0</span>)
+                .ok_or(<span class="string">&quot;Failed to convert timestamp&quot;</span>)<span class="question-mark">?</span>;
             <span class="kw">let </span>localized_dt: DateTime&lt;Tz&gt; = timezone.from_utc_datetime(<span class="kw-2">&amp;</span>naive_dt);
             <span class="kw">let </span>hour = localized_dt.format(<span class="string">&quot;%H&quot;</span>).to_string();
             x_labels.push((i <span class="kw">as </span>u32, hour + <span class="string">&quot;:00&quot;</span>));
@@ -281,7 +259,15 @@
         .set_label_area_size(LabelAreaPosition::Right, <span class="number">40.0</span>)
         .build_cartesian_2d(
             <span class="number">0</span>..data.len() <span class="kw">as </span>u32,
-            data.iter().min().unwrap() - <span class="number">10</span>..data.iter().max().unwrap() + <span class="number">10</span>,
+            data.iter()
+                .min()
+                .ok_or(<span class="string">&quot;Failed to find the minimum value&quot;</span>)<span class="question-mark">?
+                </span>- <span class="number">10
+                </span>..data
+                    .iter()
+                    .max()
+                    .ok_or(<span class="string">&quot;Failed to find the maximum value&quot;</span>)<span class="question-mark">?
+                    </span>+ <span class="number">10</span>,
         )<span class="question-mark">?</span>;
 
     chart

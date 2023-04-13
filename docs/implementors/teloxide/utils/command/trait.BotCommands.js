@@ -1,3 +1,3 @@
 (function() {var implementors = {
-"telegram_rust":[["impl BotCommands for <a class=\"enum\" href=\"telegram_rust/handlers/currency/enum.SimpleCommand.html\" title=\"enum telegram_rust::handlers::currency::SimpleCommand\">SimpleCommand</a>"]]
+"telegram_rust":[["impl BotCommands for <a class=\"enum\" href=\"telegram_rust/handlers/currency/enum.SimpleCommand.html\" title=\"enum telegram_rust::handlers::currency::SimpleCommand\">SimpleCommand</a>"],["impl BotCommands for <a class=\"enum\" href=\"telegram_rust/handlers/currency/enum.AdminCommand.html\" title=\"enum telegram_rust::handlers::currency::AdminCommand\">AdminCommand</a>"]]
 };if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":[["get_currency_price","Fetches the price of a cryptocurrency from CoinMarketCap"],["price_command",""]]};

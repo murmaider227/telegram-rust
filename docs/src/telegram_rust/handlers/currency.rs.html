@@ -124,11 +124,83 @@
 <a href="#124" id="124">124</a>
 <a href="#125" id="125">125</a>
 <a href="#126" id="126">126</a>
-</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::commands::chart::chart_command;
-<span class="kw">use </span><span class="kw">crate</span>::commands::price::price_command;
-<span class="kw">use </span><span class="kw">crate</span>::commands::price_all::price_all_command;
-<span class="kw">use </span><span class="kw">crate</span>::commands::start::start_command;
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
+<a href="#142" id="142">142</a>
+<a href="#143" id="143">143</a>
+<a href="#144" id="144">144</a>
+<a href="#145" id="145">145</a>
+<a href="#146" id="146">146</a>
+<a href="#147" id="147">147</a>
+<a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
+<a href="#162" id="162">162</a>
+<a href="#163" id="163">163</a>
+<a href="#164" id="164">164</a>
+<a href="#165" id="165">165</a>
+<a href="#166" id="166">166</a>
+<a href="#167" id="167">167</a>
+<a href="#168" id="168">168</a>
+<a href="#169" id="169">169</a>
+<a href="#170" id="170">170</a>
+<a href="#171" id="171">171</a>
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::commands::{
+    chart::chart_command,
+    currency::{add_currency_command, remove_currency_command},
+    price::price_command,
+    price_all::price_all_command,
+    send_all::{send_all_command, send_message_at_specific_time},
+    start::start_command,
+};
 <span class="kw">use </span><span class="kw">crate</span>::db::DatabaseManager;
+<span class="kw">use </span><span class="kw">crate</span>::tools::parse_text::parse_text;
 <span class="kw">use </span>teloxide::{prelude::<span class="kw-2">*</span>, types::Update, utils::command::BotCommands};
 
 <span class="kw">pub async fn </span>register_currency_handlers(bot: Bot, db: DatabaseManager) {
@@ -141,11 +213,19 @@
                 </span>.filter_command::&lt;SimpleCommand&gt;()
                 <span class="comment">// If a command parsing fails, this handler will not be executed.
                 </span>.endpoint(simple_commands_handler),
-        );
+        )
+        .branch(
+            dptree::entry()
+                .filter_command::&lt;AdminCommand&gt;()
+                .endpoint(admin_commands_handler),
+        )
+        .branch(dptree::entry().endpoint(messages_handler));
 
     bot.set_my_commands(SimpleCommand::bot_commands())
         .<span class="kw">await
         </span>.expect(<span class="string">&quot;failed setting commands&quot;</span>);
+
+    send_message_at_specific_time(bot.clone(), db.clone()).<span class="kw">await</span>;
 
     Dispatcher::builder(bot, handler)
         <span class="comment">// Here you specify initial dependencies that all handlers will receive; they can be
@@ -173,14 +253,10 @@
     </span>Help,
     <span class="attr">#[command(description = <span class="string">&quot;register user&quot;</span>)]
     </span>Start,
-    <span class="attr">#[command(description = <span class="string">&quot;shows your ID.&quot;</span>)]
-    </span>MyId,
     <span class="attr">#[command(description = <span class="string">&quot;get chart&quot;</span>)]
     </span>Chart(String),
     <span class="attr">#[command(description = <span class="string">&quot;handle a price&quot;</span>, parse_with = <span class="string">&quot;split&quot;</span>)]
     </span>Price { value: f64, currency: String },
-    <span class="attr">#[command(description = <span class="string">&quot;shows your data.&quot;</span>)]
-    </span>Me,
     <span class="attr">#[command(description = <span class="string">&quot;add currency&quot;</span>)]
     </span>AddCurrency(String),
     <span class="attr">#[command(description = <span class="string">&quot;remove currency&quot;</span>)]
@@ -201,10 +277,6 @@
             bot.send_message(msg.chat.id, SimpleCommand::descriptions().to_string())
                 .<span class="kw">await</span><span class="question-mark">?</span>;
         }
-        SimpleCommand::MyId =&gt; {
-            bot.send_message(msg.chat.id, <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, msg.from().unwrap().id))
-                .<span class="kw">await</span><span class="question-mark">?</span>;
-        }
         SimpleCommand::Chart(currency) =&gt; {
             chart_command(bot.clone(), msg.clone(), currency).<span class="kw">await</span>;
         }
@@ -216,27 +288,35 @@
             <span class="kw">let </span>result = start_command(msg.clone(), cfg.clone()).<span class="kw">await</span>;
             bot.send_message(msg.chat.id, result).<span class="kw">await</span><span class="question-mark">?</span>;
         }
-        SimpleCommand::Me =&gt; {
-            <span class="kw">let </span>result = cfg
-                .get_user(msg.from().unwrap().id.<span class="number">0 </span><span class="kw">as </span>i64)
-                .<span class="kw">await
-                </span>.expect(<span class="string">&quot;Error get user&quot;</span>);
-            bot.send_message(msg.chat.id, <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, result))
-                .<span class="kw">await</span><span class="question-mark">?</span>;
-        }
         SimpleCommand::AddCurrency(currency) =&gt; {
-            cfg.change_user_currency(msg.from().unwrap().id.<span class="number">0 </span><span class="kw">as </span>i64, currency.clone())
-                .<span class="kw">await
-                </span>.expect(<span class="string">&quot;Error add currency&quot;</span>);
-            bot.send_message(msg.chat.id, <span class="macro">format!</span>(<span class="string">&quot;добавили {:?}&quot;</span>, currency))
+            <span class="comment">// return if currency is empty
+            </span><span class="kw">if </span>currency.is_empty() {
+                bot.send_message(
+                    msg.chat.id,
+                    <span class="string">&quot;Type /addcurrency [currency_name]\nExample: /addcurrency btc&quot;</span>,
+                )
+                .reply_to_message_id(msg.id)
                 .<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+            }
+            <span class="kw">let </span>result =
+                add_currency_command(msg.from().unwrap().id.<span class="number">0 </span><span class="kw">as </span>i64, currency, cfg.clone()).<span class="kw">await</span>;
+            bot.send_message(msg.chat.id, result).<span class="kw">await</span><span class="question-mark">?</span>;
         }
         SimpleCommand::RemoveCurrency(currency) =&gt; {
-            cfg.remove_user_currency(msg.from().unwrap().id.<span class="number">0 </span><span class="kw">as </span>i64, currency.clone())
-                .<span class="kw">await
-                </span>.expect(<span class="string">&quot;Error add currency&quot;</span>);
-            bot.send_message(msg.chat.id, <span class="macro">format!</span>(<span class="string">&quot;удалили {:?}&quot;</span>, currency))
+            <span class="kw">if </span>currency.is_empty() {
+                bot.send_message(
+                    msg.chat.id,
+                    <span class="string">&quot;Type /removecurrency [currency_name]\nExample: /removecurrency btc&quot;</span>,
+                )
+                .reply_to_message_id(msg.id)
                 .<span class="kw">await</span><span class="question-mark">?</span>;
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+            }
+            <span class="kw">let </span>res =
+                remove_currency_command(msg.from().unwrap().id.<span class="number">0 </span><span class="kw">as </span>i64, currency, cfg.clone())
+                    .<span class="kw">await</span>;
+            bot.send_message(msg.chat.id, res).<span class="kw">await</span><span class="question-mark">?</span>;
         }
         SimpleCommand::PriceAll =&gt; {
             <span class="kw">let </span>user = cfg
@@ -248,6 +328,60 @@
         }
     };
 
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="attr">#[derive(BotCommands, Clone)]
+#[command(rename_rule = <span class="string">&quot;lowercase&quot;</span>, description = <span class="string">&quot;Admin commands&quot;</span>)]
+</span><span class="kw">enum </span>AdminCommand {
+    <span class="attr">#[command(description = <span class="string">&quot;shows this message.&quot;</span>)]
+    </span>Sendall(String),
+    <span class="attr">#[command(description = <span class="string">&quot;shows your data.&quot;</span>)]
+    </span>Me,
+    <span class="attr">#[command(description = <span class="string">&quot;shows your ID.&quot;</span>)]
+    </span>MyId,
+}
+
+<span class="kw">async fn </span>admin_commands_handler(
+    cfg: DatabaseManager,
+    bot: Bot,
+    <span class="comment">// me: teloxide::types::Me,
+    </span>msg: Message,
+    cmd: AdminCommand,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), teloxide::RequestError&gt; {
+    <span class="kw">match </span>cmd {
+        AdminCommand::Sendall(text) =&gt; {
+            send_all_command(cfg, bot.clone(), text).<span class="kw">await</span>;
+        }
+        AdminCommand::Me =&gt; {
+            <span class="kw">let </span>result = cfg
+                .get_user(msg.from().unwrap().id.<span class="number">0 </span><span class="kw">as </span>i64)
+                .<span class="kw">await
+                </span>.expect(<span class="string">&quot;Error get user&quot;</span>);
+            bot.send_message(msg.chat.id, <span class="macro">format!</span>(<span class="string">&quot;{:?}&quot;</span>, result))
+                .<span class="kw">await</span><span class="question-mark">?</span>;
+        }
+        AdminCommand::MyId =&gt; {
+            bot.send_message(msg.chat.id, <span class="macro">format!</span>(<span class="string">&quot;{}&quot;</span>, msg.from().unwrap().id))
+                .<span class="kw">await</span><span class="question-mark">?</span>;
+        }
+    }
+    <span class="prelude-val">Ok</span>(())
+}
+
+<span class="kw">async fn </span>messages_handler(
+    <span class="comment">// cfg: DatabaseManager,
+    </span>bot: Bot,
+    <span class="comment">// me: teloxide::types::Me,
+    </span>msg: Message,
+) -&gt; <span class="prelude-ty">Result</span>&lt;(), teloxide::RequestError&gt; {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(text) = msg.text() {
+        <span class="kw">let </span>res = parse_text(text).<span class="kw">await</span>;
+        <span class="kw">if </span>res.len() &lt;= <span class="number">1 </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+        bot.send_message(msg.chat.id, res).<span class="kw">await</span><span class="question-mark">?</span>;
+    }
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
