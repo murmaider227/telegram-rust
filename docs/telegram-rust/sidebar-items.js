@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":[["connect_to_db",""],["main",""]],"mod":[["commands",""],["db",""],["handlers",""],["models",""],["tests",""]]};

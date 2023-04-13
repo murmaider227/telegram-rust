@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":[["SimpleCommand",""]],"fn":[["register_currency_handlers",""],["simple_commands_handler",""]]};
