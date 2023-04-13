@@ -2,13 +2,38 @@
 
 All notable changes to this project will be documented in this file.
 
-## [unreleased]
+## [1.0.1] - 2023-04-13
+
+### Bug Fixes
+
+- GitHub actions
+- Fixed panic errors
+
+### Features
+
+- Sending message to all users at specific time
+- Add parsing text for all currency in
+- Add parsing text for all twitter links
+
+### Testing
+
+- Add tests for twitter and currency parse
+
+## [1.0.0] - 2023-04-05
+
+### Documentation
+
+- Changelog update
 
 ### Features
 
 - Added two commands and db
 - Add user command to remove currency
 - Add command to show prices for user currency
+
+### Miscellaneous Tasks
+
+- New commands and tests
 
 ### Testing
 

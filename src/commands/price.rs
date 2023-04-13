@@ -1,6 +1,5 @@
 use reqwest::Url;
 use std::env;
-
 pub async fn price_command(value: f64, currency: String) -> String {
     let result = get_currency_price(value, currency).await;
     match result {

@@ -1,6 +1,7 @@
 use crate::commands::price::price_command;
 use crate::commands::price_all::price_all_command;
 use crate::models::user::User;
+use crate::tools::parse_currency::parse_currency;
 use dotenvy::dotenv;
 //use super::*;
 
@@ -56,4 +57,29 @@ async fn test_price_all_command_empty() {
         result,
         "You don't have any currency, type /addcurency curency-name"
     );
+}
+
+#[tokio::test]
+async fn test_parse_currency() {
+    dotenv().ok();
+    let text = "Hello, I want to buy 1 BTC";
+    let result = parse_currency(text).await.unwrap();
+    assert!(result.contains("BTC"));
+}
+
+#[tokio::test]
+async fn test_parse_currency_with_multiple_currencies() {
+    dotenv().ok();
+    let text = "I have 0.5 BTC and 1000 ETH";
+    let result = parse_currency(text).await.unwrap();
+    assert!(result.contains("BTC"));
+    assert!(result.contains("ETH"));
+}
+
+#[tokio::test]
+async fn test_parse_currency_invalid_regex() {
+    dotenv().ok();
+    let text = "I have 1000BTC";
+    let result = parse_currency(text).await;
+    assert!(result.is_none());
 }
