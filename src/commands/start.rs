@@ -25,7 +25,7 @@ pub async fn start_command(msg: Message, cfg: DatabaseManager) -> String {
     let save = cfg.insert_user(res).await;
     match save {
         Ok(_) => (),
-        Err(_) => debug!("user already exists"),
+        Err(err) => debug!("user already exists: {}", err),
     }
     "Hello with start".to_string()
 }

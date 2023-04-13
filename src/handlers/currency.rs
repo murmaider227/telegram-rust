@@ -1,14 +1,13 @@
-use crate::commands::send_all::{send_all_command, send_message_at_specific_time};
 use crate::commands::{
     chart::chart_command,
     currency::{add_currency_command, remove_currency_command},
     price::price_command,
     price_all::price_all_command,
+    send_all::{send_all_command, send_message_at_specific_time},
     start::start_command,
 };
 use crate::db::DatabaseManager;
 use crate::tools::parse_text::parse_text;
-use log::debug;
 use teloxide::{prelude::*, types::Update, utils::command::BotCommands};
 
 pub async fn register_currency_handlers(bot: Bot, db: DatabaseManager) {
@@ -61,14 +60,10 @@ enum SimpleCommand {
     Help,
     #[command(description = "register user")]
     Start,
-    #[command(description = "shows your ID.")]
-    MyId,
     #[command(description = "get chart")]
     Chart(String),
     #[command(description = "handle a price", parse_with = "split")]
     Price { value: f64, currency: String },
-    #[command(description = "shows your data.")]
-    Me,
     #[command(description = "add currency")]
     AddCurrency(String),
     #[command(description = "remove currency")]
@@ -89,10 +84,6 @@ async fn simple_commands_handler(
             bot.send_message(msg.chat.id, SimpleCommand::descriptions().to_string())
                 .await?;
         }
-        SimpleCommand::MyId => {
-            bot.send_message(msg.chat.id, format!("{}", msg.from().unwrap().id))
-                .await?;
-        }
         SimpleCommand::Chart(currency) => {
             chart_command(bot.clone(), msg.clone(), currency).await;
         }
@@ -104,20 +95,31 @@ async fn simple_commands_handler(
             let result = start_command(msg.clone(), cfg.clone()).await;
             bot.send_message(msg.chat.id, result).await?;
         }
-        SimpleCommand::Me => {
-            let result = cfg
-                .get_user(msg.from().unwrap().id.0 as i64)
-                .await
-                .expect("Error get user");
-            bot.send_message(msg.chat.id, format!("{:?}", result))
-                .await?;
-        }
         SimpleCommand::AddCurrency(currency) => {
-            let res =
+            // return if currency is empty
+            if currency.is_empty() {
+                bot.send_message(
+                    msg.chat.id,
+                    "Type /addcurrency [currency_name]\nExample: /addcurrency btc",
+                )
+                .reply_to_message_id(msg.id)
+                .await?;
+                return Ok(());
+            }
+            let result =
                 add_currency_command(msg.from().unwrap().id.0 as i64, currency, cfg.clone()).await;
-            bot.send_message(msg.chat.id, res).await?;
+            bot.send_message(msg.chat.id, result).await?;
         }
         SimpleCommand::RemoveCurrency(currency) => {
+            if currency.is_empty() {
+                bot.send_message(
+                    msg.chat.id,
+                    "Type /removecurrency [currency_name]\nExample: /removecurrency btc",
+                )
+                .reply_to_message_id(msg.id)
+                .await?;
+                return Ok(());
+            }
             let res =
                 remove_currency_command(msg.from().unwrap().id.0 as i64, currency, cfg.clone())
                     .await;
@@ -141,23 +143,34 @@ async fn simple_commands_handler(
 enum AdminCommand {
     #[command(description = "shows this message.")]
     Sendall(String),
+    #[command(description = "shows your data.")]
+    Me,
+    #[command(description = "shows your ID.")]
+    MyId,
 }
 
 async fn admin_commands_handler(
     cfg: DatabaseManager,
     bot: Bot,
     // me: teloxide::types::Me,
-    // msg: Message,
+    msg: Message,
     cmd: AdminCommand,
 ) -> Result<(), teloxide::RequestError> {
     match cmd {
         AdminCommand::Sendall(text) => {
-            // let users = cfg.get_all_users().await.unwrap();
-            // for user in users {
-            //     bot.send_message(UserId(user.user_id as u64), text.clone())
-            //         .await?;
-            // }
             send_all_command(cfg, bot.clone(), text).await;
+        }
+        AdminCommand::Me => {
+            let result = cfg
+                .get_user(msg.from().unwrap().id.0 as i64)
+                .await
+                .expect("Error get user");
+            bot.send_message(msg.chat.id, format!("{:?}", result))
+                .await?;
+        }
+        AdminCommand::MyId => {
+            bot.send_message(msg.chat.id, format!("{}", msg.from().unwrap().id))
+                .await?;
         }
     }
     Ok(())
@@ -171,7 +184,6 @@ async fn messages_handler(
 ) -> Result<(), teloxide::RequestError> {
     if let Some(text) = msg.text() {
         let res = parse_text(text).await;
-        debug!("res: {:?}", res);
         if res.len() <= 1 {
             return Ok(());
         }

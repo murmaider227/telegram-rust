@@ -52,8 +52,8 @@ async fn get_chart(currency: &String) -> Result<Vec<u32>, Box<dyn std::error::Er
 
     let mut data = vec![];
     for kline in response_json {
-        let close_value = kline[4].as_str().unwrap();
-        let close = close_value.parse::<f64>().unwrap();
+        let close_value = kline[4].as_str().ok_or("Failed to convert to str")?;
+        let close = close_value.parse::<f64>()?;
         data.push(close);
     }
 
@@ -72,7 +72,7 @@ async fn send_chart(
     let root = BitMapBackend::new(&filename, (640, 480)).into_drawing_area();
     root.fill(&WHITE)?;
 
-    let timezone: Tz = "Europe/Kiev".parse().unwrap();
+    let timezone: Tz = "Europe/Kiev".parse()?;
 
     let last_day = chrono::Utc::now() - chrono::Duration::days(1);
 
@@ -81,7 +81,8 @@ async fn send_chart(
     for (i, _) in data.iter().enumerate() {
         if i % 2 == 0 {
             let timestamp = last_day.timestamp() as u32 + i as u32 * 60 * 60;
-            let naive_dt = chrono::NaiveDateTime::from_timestamp_opt(timestamp as i64, 0).unwrap();
+            let naive_dt = chrono::NaiveDateTime::from_timestamp_opt(timestamp as i64, 0)
+                .ok_or("Failed to convert timestamp")?;
             let localized_dt: DateTime<Tz> = timezone.from_utc_datetime(&naive_dt);
             let hour = localized_dt.format("%H").to_string();
             x_labels.push((i as u32, hour + ":00"));
@@ -100,7 +101,15 @@ async fn send_chart(
         .set_label_area_size(LabelAreaPosition::Right, 40.0)
         .build_cartesian_2d(
             0..data.len() as u32,
-            data.iter().min().unwrap() - 10..data.iter().max().unwrap() + 10,
+            data.iter()
+                .min()
+                .ok_or("Failed to find the minimum value")?
+                - 10
+                ..data
+                    .iter()
+                    .max()
+                    .ok_or("Failed to find the maximum value")?
+                    + 10,
         )?;
 
     chart

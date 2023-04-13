@@ -51,7 +51,7 @@ impl DatabaseManager {
 
         match res {
             Ok(_) => (),
-            Err(_) => debug!("user already exists"),
+            Err(err) => debug!("user already exists: {}", err),
         }
 
         Ok(())
@@ -61,28 +61,9 @@ impl DatabaseManager {
         let collection: Collection<User> = self.db.collection("user");
         let user_query = collection.find_one(doc! {"user_id": user_id}, None).await;
 
-        // let user = match user_query {
-        //     Some(user) => user,
-        //     None => {
-        //         let usr = User::new(user_id, "".to_string(), vec![]);
-        //         usr.save(self.clone()).await?;
-        //         usr
-        //     }
-        // };
-        // let user = match user_query {
-        //     Ok(user) => user,
-        //     Err(_) => {
-        //         let usr = User::new(user_id, "".to_string(), vec![]);
-        //         let saved_user = usr.save(self.clone()).await;
-        //         if saved_user.is_err() {
-        //             return None;
-        //         }
-        //         //Some(usr)
-        //     }
-        // };
         match user_query {
             Ok(Some(user)) => {
-                debug!("user Ok: {:?}", user);
+                // debug!("user Ok: {:?}", user);
                 Some(user)
             }
             Ok(None) => {
@@ -123,10 +104,10 @@ impl DatabaseManager {
         }
         user.currency = unique_currency;
         let user_doc = self.update_user_doc(user).await;
-        let res = collection
+        collection
             .update_one(doc! {"user_id": user_id}, doc! {"$set": user_doc}, None)
             .await?;
-        debug!("Updated user: {:?}", res.modified_count);
+        //debug!("Updated user: {:?}", res.modified_count);
         Ok(())
     }
 

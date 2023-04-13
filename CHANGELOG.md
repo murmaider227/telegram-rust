@@ -2,7 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
-## [1.0.1] - 2023-04-12
+## [1.0.1] - 2023-04-13
+
+### Bug Fixes
+
+- GitHub actions
+- Fixed panic errors
 
 ### Features
 
