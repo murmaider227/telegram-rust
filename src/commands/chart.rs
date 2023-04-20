@@ -15,12 +15,6 @@ pub async fn chart_command(bot: Bot, msg: Message, currency: String) {
         if let Err(err) = send_chart(bot.clone(), msg.clone(), currency.clone()).await {
             println!("Error sending photo: {}", err);
         }
-        if let Err(err) = bot
-            .send_message(msg.chat.id, format!("price for {} not found", currency))
-            .await
-        {
-            println!("Error sending photo: {}", err);
-        }
     });
 }
 

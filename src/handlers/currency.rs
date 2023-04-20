@@ -62,8 +62,8 @@ enum SimpleCommand {
     Start,
     #[command(description = "get chart")]
     Chart(String),
-    #[command(description = "handle a price", parse_with = "split")]
-    Price { value: f64, currency: String },
+    #[command(description = "handle a price")]
+    Price(String),
     #[command(description = "add currency")]
     AddCurrency(String),
     #[command(description = "remove currency")]
@@ -87,8 +87,8 @@ async fn simple_commands_handler(
         SimpleCommand::Chart(currency) => {
             chart_command(bot.clone(), msg.clone(), currency).await;
         }
-        SimpleCommand::Price { value, currency } => {
-            let result = price_command(value, currency).await;
+        SimpleCommand::Price(currency) => {
+            let result = price_command(currency).await;
             bot.send_message(msg.chat.id, result).await?;
         }
         SimpleCommand::Start => {

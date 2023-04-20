@@ -41,8 +41,8 @@ pub async fn send_all_command(cfg: DatabaseManager, bot: Bot, text: String) {
 pub async fn send_message_at_specific_time(bot: Bot, cfg: DatabaseManager) {
     tokio::spawn(async move {
         // Установите время, в которое необходимо отправить сообщение (например, 00:39 AM)
-        let target_hour = 16;
-        let target_minute = 32;
+        let target_hour = 11;
+        let target_minute = 00;
 
         loop {
             let now = Local::now();
