@@ -1,3 +1,4 @@
+use crate::commands::notify::notify_command;
 use crate::commands::{
     chart::chart_command,
     currency::{add_currency_command, remove_currency_command},
@@ -70,6 +71,8 @@ enum SimpleCommand {
     RemoveCurrency(String),
     #[command(description = "print all user currencies")]
     PriceAll,
+    #[command(description = "enable/disable notify about currencies")]
+    Notify,
 }
 
 async fn simple_commands_handler(
@@ -131,6 +134,10 @@ async fn simple_commands_handler(
                 .await
                 .expect("Error get user");
             let result = price_all_command(user).await;
+            bot.send_message(msg.chat.id, result).await?;
+        }
+        SimpleCommand::Notify => {
+            let result = notify_command(msg.from().unwrap().id.0 as i64, cfg.clone()).await;
             bot.send_message(msg.chat.id, result).await?;
         }
     };

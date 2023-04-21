@@ -37,11 +37,8 @@ pub async fn price_command(currency: String) -> String {
 /// ```
 ///
 
-async fn get_currency_price(
-    currency: String,
-) -> Result<String, Box<dyn std::error::Error>> {
+async fn get_currency_price(currency: String) -> Result<String, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
-
 
     let currency = currency.to_uppercase();
 
