@@ -63,11 +63,11 @@ async fn parser_coins_mult(coins: &[(String, String)]) -> Result<String, Box<dyn
             prices_data.get(crypto).and_then(|price_data| {
                 let price = price_data[0]["quote"]["USD"]["price"].as_f64()?;
                 let amount_usd = amount.parse::<f64>().ok()? * price;
-                Some(format!("💰{} {}\n{:.4} usd", amount, crypto, amount_usd))
+                Some(format!("💰{} {}\n{:.4} usd\n", amount, crypto, amount_usd))
             })
         })
         .collect::<Vec<_>>()
-        .join("\n");
+        .join("");
 
     Ok(result)
 }
