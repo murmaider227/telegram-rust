@@ -13,12 +13,13 @@ pub async fn chart_command(bot: Bot, msg: Message, currency: String) {
     spawn(async move {
         // Дожидаемся завершения отправки фото
         if let Err(err) = send_chart(bot.clone(), msg.clone(), currency.clone()).await {
-            println!("Error sending photo: {}", err);
+            log::error!("Error sending photo: {}", err);
         }
     });
 }
 
-async fn get_chart(currency: &String) -> Result<Vec<u32>, Box<dyn std::error::Error>> {
+/// get info about the specified currency from binance api
+async fn get_chart(currency: &String) -> Result<Vec<f64>, Box<dyn std::error::Error>> {
     let symbol = currency.to_uppercase() + "USDT";
     let interval = "1h";
     let url = format!(
@@ -44,33 +45,38 @@ async fn get_chart(currency: &String) -> Result<Vec<u32>, Box<dyn std::error::Er
 
     let response_json = response.json::<Vec<Vec<Value>>>().await?;
 
-    let mut data = vec![];
+    let mut data = Vec::with_capacity(200000);
     for kline in response_json {
         let close_value = kline[4].as_str().ok_or("Failed to convert to str")?;
         let close = close_value.parse::<f64>()?;
         data.push(close);
     }
 
-    Ok(data.iter().map(|&d| d as u32).collect())
+    //Ok(data.iter().map(|&d| d as u32).collect())
+    Ok(data)
 }
 
+#[tokio::test]
+async fn test_get_chart() {
+    let data = get_chart(&"btc".to_string()).await.unwrap();
+    assert!(data.len() > 1);
+}
+
+/// Send a chart of the specified currency
 async fn send_chart(
     bot: Bot,
     msg: Message,
     currency: String,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let data_all = get_chart(&currency).await?;
-    let data: Vec<u32> = data_all.iter().rev().take(24).copied().rev().collect(); // get last 30 days
-                                                                                  //println!("{:?}", data);
+    let data: Vec<f64> = data_all.iter().rev().take(24).copied().rev().collect(); // get last 30 days
     let filename = format!("chart_{}.png", chrono::Utc::now().timestamp());
-    let root = BitMapBackend::new(&filename, (640, 480)).into_drawing_area();
-    root.fill(&WHITE)?;
 
     let timezone: Tz = "Europe/Kiev".parse()?;
 
     let last_day = chrono::Utc::now() - chrono::Duration::days(1);
 
-    let mut x_labels = vec![];
+    let mut x_labels: Vec<(u32, String)> = vec![];
 
     for (i, _) in data.iter().enumerate() {
         if i % 2 == 0 {
@@ -85,6 +91,29 @@ async fn send_chart(
         }
     }
 
+    build_chart(x_labels, currency, data, filename.clone()).await?;
+
+    let filename_clone = filename.clone();
+
+    spawn(async move {
+        // Дожидаемся завершения отправки фото
+        if let Err(err) = send_chart_file(&bot, &msg, &filename_clone).await {
+            println!("Error sending photo: {}", err);
+        }
+    });
+
+    Ok(())
+}
+
+/// Builds a chart and saves it to a file
+async fn build_chart(
+    x_labels: Vec<(u32, String)>,
+    currency: String,
+    data: Vec<f64>,
+    filename: String,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let root = BitMapBackend::new(&filename, (640, 480)).into_drawing_area();
+    root.fill(&WHITE)?;
     let mut chart = ChartBuilder::on(&root)
         .caption(
             format!("Price Chart for {} in 24 hours", currency),
@@ -95,15 +124,14 @@ async fn send_chart(
         .set_label_area_size(LabelAreaPosition::Right, 40.0)
         .build_cartesian_2d(
             0..data.len() as u32,
-            data.iter()
-                .min()
-                .ok_or("Failed to find the minimum value")?
-                - 10
-                ..data
+            (*data
+                .iter()
+                .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                .ok_or("Failed to find the minimum value")?)
+                ..(*data
                     .iter()
-                    .max()
-                    .ok_or("Failed to find the maximum value")?
-                    + 10,
+                    .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                    .ok_or("Failed to find the maximum value")?),
         )?;
 
     chart
@@ -121,19 +149,10 @@ async fn send_chart(
         (0..).zip(data.iter()).map(|(x, y)| (x, *y)),
         &BLUE,
     ))?;
-
-    let filename_clone = filename.clone();
-
-    spawn(async move {
-        // Дожидаемся завершения отправки фото
-        if let Err(err) = send_chart_file(&bot, &msg, &filename_clone).await {
-            println!("Error sending photo: {}", err);
-        }
-    });
-
     Ok(())
 }
 
+/// Sends a chart file to the user
 async fn send_chart_file(
     bot: &Bot,
     msg: &Message,

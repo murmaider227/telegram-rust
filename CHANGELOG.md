@@ -2,6 +2,18 @@
 
 All notable changes to this project will be documented in this file.
 
+## [1.0.2] - 2023-05-07
+
+### Bug Fixes
+
+- Resolve problem with float values in chart
+
+### Features
+
+- Detailed info about currency
+- Option to turn on/off user notificaton
+- Parsing magiceden links
+
 ## [1.0.1] - 2023-04-13
 
 ### Bug Fixes
