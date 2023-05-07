@@ -38,13 +38,7 @@ impl DatabaseManager {
     pub async fn insert_user(&self, user: User) -> Result<(), Box<dyn Error>> {
         let collection = self.db.collection("user");
 
-        let user_doc = doc! {
-            "user_id": user.user_id,
-            "username": user.username,
-            "currency": Bson::Array(user.currency.into_iter().map(Bson::String).collect()),
-            "created_at": user.created_at,
-            "updated_at": user.updated_at,
-        };
+        let user_doc = self.update_user_doc(user).await;
 
         let res = collection.insert_one(user_doc, None).await;
         // info!("Inserted user: {:?}", res.inserted_id);
@@ -77,7 +71,7 @@ impl DatabaseManager {
                 }
             }
             Err(err) => {
-                debug!("user save error2: {:?}", err);
+                debug!("get user error: {:?}", err);
                 None
             }
         }
@@ -91,10 +85,10 @@ impl DatabaseManager {
     ) -> Result<(), Box<dyn Error>> {
         let collection: Collection<User> = self.db.collection("user");
         let user_query = self.get_user(user_id).await;
-        if user_query.is_none() {
-            return Err("Problem with user saving".into());
-        }
-        let mut user = user_query.unwrap();
+        let mut user = match user_query {
+            Some(user) => user,
+            None => return Err("Problem with user saving".into()),
+        };
         user.currency.push(currency);
         let mut unique_currency: Vec<String> = Vec::new();
         for c in user.currency.into_iter() {
@@ -119,10 +113,10 @@ impl DatabaseManager {
         let collection: Collection<User> = self.db.collection("user");
         let user_query = self.get_user(user_id).await;
 
-        if user_query.is_none() {
-            return Err("Problem with user saving".into());
-        }
-        let mut user = user_query.unwrap();
+        let mut user = match user_query {
+            Some(user) => user,
+            None => return Err("Problem with user saving".into()),
+        };
 
         // Отфильтровать список валют, удаляя указанную валюту
         user.currency
@@ -145,6 +139,7 @@ impl DatabaseManager {
             "currency": Bson::Array(user.currency.into_iter().map(Bson::String).collect()),
             "created_at": user.created_at,
             "updated_at": mongodb::bson::DateTime::now(),
+            "notification": user.notification,
         }
     }
 
@@ -161,5 +156,29 @@ impl DatabaseManager {
         }
 
         Ok(users_vec)
+    }
+
+    pub async fn change_notify(&self, mut user: User) -> Result<String, Box<dyn Error>> {
+        let collection: Collection<User> = self.db.collection("user");
+        user.notification = match user.notification {
+            true => false,
+            false => true,
+        };
+        let user_id = user.user_id;
+        let user_doc = self.update_user_doc(user.clone()).await;
+        let update_result = collection
+            .update_one(doc! {"user_id": user_id}, doc! {"$set": user_doc}, None)
+            .await?;
+
+        if update_result.modified_count > 0 {
+            let message = if user.notification {
+                "successfully turned on"
+            } else {
+                "successfully turned off"
+            };
+            Ok(message.to_string())
+        } else {
+            Err("user not found".into())
+        }
     }
 }

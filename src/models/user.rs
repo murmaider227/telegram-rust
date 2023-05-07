@@ -31,6 +31,8 @@ pub struct User {
     pub created_at: bson::DateTime,
     /// User updated at
     pub updated_at: bson::DateTime,
+    /// User notification
+    pub notification: bool,
 }
 
 impl User {
@@ -50,6 +52,7 @@ impl User {
             currency,
             created_at: bson::DateTime::now(),
             updated_at: bson::DateTime::now(),
+            notification: false,
         }
     }
 

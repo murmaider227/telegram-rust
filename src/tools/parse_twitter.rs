@@ -1,3 +1,4 @@
+use crate::models::errors::CustomError;
 use chrono::DateTime;
 use chrono::Utc;
 use log::{debug, error};
@@ -5,7 +6,7 @@ use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderValue};
 use reqwest::Client;
 use serde_json::Value;
-use std::{env, fmt};
+use std::env;
 
 pub async fn parse_twitter_links(text_to_parse: &str) -> Option<String> {
     let res = parse(text_to_parse).await;
@@ -49,46 +50,6 @@ async fn parse(text_to_parse: &str) -> Result<Option<String>, CustomError> {
         Ok(Some(text))
     } else {
         Ok(None)
-    }
-}
-
-// Updated CustomError enum
-#[derive(Debug)]
-pub enum CustomError {
-    Regex(regex::Error),
-    Reqwest(reqwest::Error),
-    InvalidHeader(reqwest::header::InvalidHeaderValue),
-    HttpStatus(reqwest::StatusCode),
-}
-
-// Updated Display implementation for CustomError
-impl fmt::Display for CustomError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            CustomError::Regex(e) => write!(f, "Regex error: {}", e),
-            CustomError::Reqwest(e) => write!(f, "Reqwest error: {}", e),
-            CustomError::InvalidHeader(e) => write!(f, "Invalid header error: {}", e),
-            CustomError::HttpStatus(e) => write!(f, "HTTP status error: {}", e),
-        }
-    }
-}
-
-// Update the From implementations for CustomError
-impl From<regex::Error> for CustomError {
-    fn from(err: regex::Error) -> CustomError {
-        CustomError::Regex(err)
-    }
-}
-
-impl From<reqwest::Error> for CustomError {
-    fn from(err: reqwest::Error) -> CustomError {
-        CustomError::Reqwest(err)
-    }
-}
-
-impl From<reqwest::header::InvalidHeaderValue> for CustomError {
-    fn from(err: reqwest::header::InvalidHeaderValue) -> CustomError {
-        CustomError::InvalidHeader(err)
     }
 }
 

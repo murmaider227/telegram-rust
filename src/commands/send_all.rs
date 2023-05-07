@@ -8,21 +8,35 @@ use tokio::time::{self, Duration};
 
 async fn send_all_currency(cfg: DatabaseManager, bot: Bot, _text: String) {
     let filter = Some(doc! {
-        "currency.0": { "$exists": true },
+        "notification": true,
+        "currency.0": { "$exists": true }
     });
-    let users = cfg.get_all_users(filter).await.unwrap();
+    let users_query = cfg.get_all_users(filter).await;
 
-    for user in users {
-        let currency_text = price_all_command(user.clone()).await;
-        if let Err(err) = bot
-            .send_message(UserId(user.user_id as u64), currency_text)
-            .await
-        {
-            debug!("Error sending photo: {}", err);
+    let users = match users_query {
+        Ok(users) => users,
+        Err(err) => {
+            debug!("Error getting users: {}", err);
+            return;
         }
-        // bot.bot.send_message(UserId(user.user_id as u64), text.clone())
-        //     .await?;
-    }
+    };
+
+    tokio::spawn(async move {
+        for user in users {
+            let currency_text = price_all_command(user.clone()).await;
+
+            if let Err(err) = bot
+                .send_message(UserId(user.user_id as u64), currency_text)
+                .await
+            {
+                debug!("Error sending photo: {}", err);
+            }
+            let mess = "\n Для отключения уведомлений напишите /notify";
+            if let Err(err) = bot.send_message(UserId(user.user_id as u64), mess).await {
+                debug!("Error sending photo: {}", err);
+            }
+        }
+    });
 }
 /// Send all users a message
 pub async fn send_all_command(cfg: DatabaseManager, bot: Bot, text: String) {
@@ -41,8 +55,8 @@ pub async fn send_all_command(cfg: DatabaseManager, bot: Bot, text: String) {
 pub async fn send_message_at_specific_time(bot: Bot, cfg: DatabaseManager) {
     tokio::spawn(async move {
         // Установите время, в которое необходимо отправить сообщение (например, 00:39 AM)
-        let target_hour = 16;
-        let target_minute = 32;
+        let target_hour = 11;
+        let target_minute = 00;
 
         loop {
             let now = Local::now();

@@ -1,7 +1,7 @@
 use reqwest::Url;
 use std::env;
-pub async fn price_command(value: f64, currency: String) -> String {
-    let result = get_currency_price(value, currency).await;
+pub async fn price_command(currency: String) -> String {
+    let result = get_currency_price(currency).await;
     match result {
         Ok(result) => result,
         Err(err) => err.to_string(),
@@ -37,23 +37,16 @@ pub async fn price_command(value: f64, currency: String) -> String {
 /// ```
 ///
 
-async fn get_currency_price(
-    value: f64,
-    currency: String,
-) -> Result<String, Box<dyn std::error::Error>> {
+async fn get_currency_price(currency: String) -> Result<String, Box<dyn std::error::Error>> {
     let client = reqwest::Client::new();
-
-    if value == 0.0 {
-        return Err("Error invalid value: 0.0".to_string().into());
-    }
 
     let currency = currency.to_uppercase();
 
     let token = env::var("CMC_TOKEN").expect("Fatality! CMC_PRO_API_KEY not set!");
 
     let url = Url::parse_with_params(
-        "https://pro-api.coinmarketcap.com/v2/cryptocurrency/quotes/latest",
-        &[("symbol", &currency)],
+        "https://min-api.cryptocompare.com/data/pricemultifull",
+        &[("fsyms", &currency), ("tsyms", &"USD".to_string())],
     )?;
 
     let response = client
@@ -79,11 +72,19 @@ async fn get_currency_price(
         Err(err) => return Err(err.into()),
     };
 
-    let price = response_json["data"][&currency][0]["quote"]["USD"]["price"].as_f64();
+    let price = response_json["RAW"][&currency]["USD"]["PRICE"].as_f64();
+    let max_price = response_json["RAW"][&currency]["USD"]["HIGH24HOUR"].as_f64();
+    let min_price = response_json["RAW"][&currency]["USD"]["LOW24HOUR"].as_f64();
+    let change = response_json["RAW"][&currency]["USD"]["CHANGEPCT24HOUR"].as_f64();
 
-    let result = match price {
-        Some(price) => format!("The price of {} is ${:.2}", currency, price * value),
-        None => format!("Error fetching price for {}: Currency not found", currency),
+    let result = match (price, max_price, min_price, change) {
+        (Some(price), Some(max_price), Some(min_price), Some(change)) => {
+            format!(
+                "💰Coin: {}\n💵Price USD: $ {:.2}\n📊Change per 24 hour: {:.2}%\n📈High price(24 hour): $ {:.2}\n📉Low price(24 hour): $ {:.2}",
+                currency, price, change, max_price, min_price
+            )
+        }
+        _ => format!("Error fetching data for {}: Currency not found", currency),
     };
 
     Ok(result)
