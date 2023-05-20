@@ -1,7 +1,10 @@
 pub mod chart;
 pub mod currency;
+pub mod gas;
 pub mod notify;
 pub mod price;
 pub mod price_all;
 pub mod send_all;
+pub mod send_gas;
+pub mod set_gas;
 pub mod start;

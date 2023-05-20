@@ -24,22 +24,31 @@ async fn parse_eden_link(text_to_parse: &str) -> Result<String, Box<dyn Error>> 
 
     let client = Client::new();
 
-    let mut text = String::new();
+    let mut futures = Vec::new();
     for item in result {
-        let parts: Vec<&str> = item.as_str().split('/').collect();
-        if let Some(part) = parts.last() {
-            match parse_eden(part.to_string(), &client).await {
-                Ok(parsed_text) => {
-                    text += &parsed_text;
-                }
-                Err(e) => {
-                    error!("Error parsing eden link: {}", e);
-                }
+        let item_links = item.as_str().split_whitespace().collect::<Vec<&str>>();
+        for link in item_links {
+            let parts: Vec<&str> = link.split('/').collect();
+            if let Some(part) = parts.last() {
+                let client = client.clone();
+                let part = part.to_string();
+                futures.push(async move {
+                    match parse_eden(part, &client).await {
+                        Ok(parsed_text) => parsed_text,
+                        Err(e) => {
+                            error!("Error parsing eden link: {}", e);
+                            String::new()
+                        }
+                    }
+                });
+            } else {
+                error!("Couldn't get the last part of the URL");
             }
-        } else {
-            error!("Couldn't get the last part of the URL");
         }
     }
+
+    let parsed_texts = futures::future::join_all(futures).await;
+    let text = parsed_texts.into_iter().collect::<Vec<String>>().join("\n");
 
     Ok(text)
 }

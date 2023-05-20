@@ -1,6 +1,6 @@
 [package]
 name = "telegram-rust"
-version = "1.0.2"
+version = "1.0.3"
 edition = "2021"
 description = "Telegram bot for Rust"
 authors = ["murmaider227 <osakihor@gmail.com>"]
@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 teloxide = { version = "0.12.2", features = ["macros"] }
 log = { version = "0.4", features = ["std"] }
-flexi_logger = "0.25.3"
+flexi_logger = "0.25.4"
 tokio = { version =  "1.28", features = ["rt-multi-thread", "macros"] }
 dotenvy = "0.15.7"
 reqwest = { version = "0.11", features = ["blocking"] }
@@ -25,3 +25,4 @@ chrono-tz = "0.8.2"
 mongodb = { version = "2.5.0", features = ["bson-chrono-0_4"] }
 futures = "0.3"
 regex="1.8.1"
+ethers = "2.0.4"
