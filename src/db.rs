@@ -133,6 +133,11 @@ impl DatabaseManager {
     }
     // update user document
     async fn update_user_doc(&self, user: User) -> Document {
+        let gas_bson = mongodb::bson::to_bson(&user.gas).unwrap();
+        let doc_gas = match gas_bson {
+            Bson::Document(doc_gas) => doc_gas,
+            _ => panic!("Error converting HashMap to Bson document"),
+        };
         doc! {
             "user_id": user.user_id,
             "username": user.username,
@@ -140,6 +145,7 @@ impl DatabaseManager {
             "created_at": user.created_at,
             "updated_at": mongodb::bson::DateTime::now(),
             "notification": user.notification,
+            "gas": doc_gas,
         }
     }
 
@@ -177,6 +183,21 @@ impl DatabaseManager {
                 "successfully turned off"
             };
             Ok(message.to_string())
+        } else {
+            Err("user not found".into())
+        }
+    }
+
+    pub async fn update_user(&self, user: User) -> Result<(), Box<dyn Error>> {
+        let collection: Collection<User> = self.db.collection("user");
+        let user_id = user.user_id;
+        let user_doc = self.update_user_doc(user.clone()).await;
+        let update_result = collection
+            .update_one(doc! {"user_id": user_id}, doc! {"$set": user_doc}, None)
+            .await?;
+
+        if update_result.modified_count > 0 {
+            Ok(())
         } else {
             Err("user not found".into())
         }
