@@ -12,7 +12,7 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 teloxide = { version = "0.12.2", features = ["macros"] }
 log = { version = "0.4", features = ["std"] }
-flexi_logger = "0.25.3"
+flexi_logger = "0.25.5"
 tokio = { version =  "1.28", features = ["rt-multi-thread", "macros"] }
 dotenvy = "0.15.7"
 reqwest = { version = "0.11", features = ["blocking"] }
