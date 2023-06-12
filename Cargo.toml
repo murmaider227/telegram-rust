@@ -24,4 +24,4 @@ chrono = { version = "0.4.24", default-features = false, features = ["serde"] }
 chrono-tz = "0.8.2"
 mongodb = { version = "2.5.0", features = ["bson-chrono-0_4"] }
 futures = "0.3"
-regex="1.8.1"
+regex="1.8.4"
