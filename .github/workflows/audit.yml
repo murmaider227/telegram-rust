@@ -24,7 +24,7 @@ jobs:
           toolchain: stable
           override: true
       - name: Cache cargo registry and target
-        uses: Swatinem/rust-cache@v1
+        uses: Swatinem/rust-cache@v2
       - name: Install cargo-audit
         run: cargo install cargo-audit
       - name: Run cargo-audit
