@@ -1,4 +1,7 @@
+use crate::commands::gas::gas_command;
 use crate::commands::notify::notify_command;
+use crate::commands::send_gas::send_gas_all;
+use crate::commands::set_gas::set_gas_command;
 use crate::commands::{
     chart::chart_command,
     currency::{add_currency_command, remove_currency_command},
@@ -34,6 +37,7 @@ pub async fn register_currency_handlers(bot: Bot, db: DatabaseManager) {
         .expect("failed setting commands");
 
     send_message_at_specific_time(bot.clone(), db.clone()).await;
+    send_gas_all(bot.clone(), db.clone()).await;
 
     Dispatcher::builder(bot, handler)
         // Here you specify initial dependencies that all handlers will receive; they can be
@@ -73,6 +77,10 @@ enum SimpleCommand {
     PriceAll,
     #[command(description = "enable/disable notify about currencies")]
     Notify,
+    #[command(description = "get gas price")]
+    Gas,
+    #[command(description = "handle provider and gas.", parse_with = "split")]
+    SetGas { blockchain: String, gas: u32 },
 }
 
 async fn simple_commands_handler(
@@ -88,6 +96,15 @@ async fn simple_commands_handler(
                 .await?;
         }
         SimpleCommand::Chart(currency) => {
+            if currency.is_empty() {
+                bot.send_message(
+                    msg.chat.id,
+                    "Type /chart [currency_name]\nExample: /chart btc",
+                )
+                    .reply_to_message_id(msg.id)
+                    .await?;
+                return Ok(());
+            }
             chart_command(bot.clone(), msg.clone(), currency).await;
         }
         SimpleCommand::Price(currency) => {
@@ -105,8 +122,8 @@ async fn simple_commands_handler(
                     msg.chat.id,
                     "Type /addcurrency [currency_name]\nExample: /addcurrency btc",
                 )
-                .reply_to_message_id(msg.id)
-                .await?;
+                    .reply_to_message_id(msg.id)
+                    .await?;
                 return Ok(());
             }
             let result =
@@ -119,8 +136,8 @@ async fn simple_commands_handler(
                     msg.chat.id,
                     "Type /removecurrency [currency_name]\nExample: /removecurrency btc",
                 )
-                .reply_to_message_id(msg.id)
-                .await?;
+                    .reply_to_message_id(msg.id)
+                    .await?;
                 return Ok(());
             }
             let res =
@@ -138,6 +155,20 @@ async fn simple_commands_handler(
         }
         SimpleCommand::Notify => {
             let result = notify_command(msg.from().unwrap().id.0 as i64, cfg.clone()).await;
+            bot.send_message(msg.chat.id, result).await?;
+        }
+        SimpleCommand::Gas => {
+            let result = gas_command().await;
+            bot.send_message(msg.chat.id, result).await?;
+        }
+        SimpleCommand::SetGas { blockchain, gas } => {
+            let result = set_gas_command(
+                msg.from().unwrap().id.0 as i64,
+                cfg.clone(),
+                blockchain,
+                gas,
+            )
+                .await;
             bot.send_message(msg.chat.id, result).await?;
         }
     };
@@ -194,7 +225,8 @@ async fn messages_handler(
         if res.len() <= 1 {
             return Ok(());
         }
-        bot.send_message(msg.chat.id, res).await?;
+        bot.send_message(msg.chat.id, res).reply_to_message_id(msg.id)
+            .await?;
     }
     Ok(())
 }

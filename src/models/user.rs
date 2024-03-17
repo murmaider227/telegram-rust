@@ -2,6 +2,7 @@ use crate::db::DatabaseManager;
 use log::debug;
 use mongodb::bson;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::error::Error;
 
 /// User model
@@ -33,6 +34,8 @@ pub struct User {
     pub updated_at: bson::DateTime,
     /// User notification
     pub notification: bool,
+    /// User gas
+    pub gas: HashMap<String, u32>,
 }
 
 impl User {
@@ -53,6 +56,7 @@ impl User {
             created_at: bson::DateTime::now(),
             updated_at: bson::DateTime::now(),
             notification: false,
+            gas: HashMap::new(),
         }
     }
 
