@@ -38,6 +38,7 @@ async fn send_all_currency(cfg: DatabaseManager, bot: Bot, _text: String) {
         }
     });
 }
+
 /// Send all users a message
 pub async fn send_all_command(cfg: DatabaseManager, bot: Bot, text: String) {
     let users = cfg.get_all_users(None).await.unwrap();
@@ -74,7 +75,7 @@ pub async fn send_message_at_specific_time(bot: Bot, cfg: DatabaseManager) {
                     target_time - now
                 } else {
                     // Если target_time уже прошло, установите его на следующий день
-                    target_time + chrono::Duration::days(1) - now
+                    target_time + chrono::Duration::try_days(1).unwrap() - now
                 };
 
                 // Ждите, пока не наступит нужное время

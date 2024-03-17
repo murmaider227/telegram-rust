@@ -1,6 +1,5 @@
 use crate::db::DatabaseManager;
 use ethers::prelude::*;
-use log::debug;
 use mongodb::bson::doc;
 use std::collections::HashMap;
 use teloxide::prelude::*;
@@ -78,4 +77,24 @@ async fn get_gas(provider: &Provider<Http>) -> Result<U256, Box<dyn std::error::
     let gas_price_wei = provider.get_gas_price().await?;
     let gas_price = gas_price_wei / 1_000_000_000u128;
     Ok(gas_price)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_get_gas() {
+        let res = get_gas_all().await;
+        assert!(res.is_ok());
+    }
+
+    #[tokio::test]
+    async fn test_get_gas_all() {
+        let res = get_gas_all().await.expect("Error getting gas");
+        for (_, gas) in res.iter() {
+            // check if gas bigger than 0
+            assert!(*gas > U256::zero());
+        }
+    }
 }

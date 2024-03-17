@@ -40,7 +40,7 @@ async fn get_chart(currency: &String) -> Result<Vec<f64>, Box<dyn std::error::Er
             currency,
             response.status().as_u16()
         )
-        .into());
+            .into());
     }
 
     let response_json = response.json::<Vec<Vec<Value>>>().await?;
@@ -75,15 +75,14 @@ async fn send_chart(
 
     let timezone: Tz = "Europe/Kiev".parse()?;
 
-    let last_day = chrono::Utc::now() - chrono::Duration::days(1);
+    let last_day = chrono::Utc::now() - chrono::Duration::try_days(1).unwrap();
 
     let mut x_labels: Vec<(u32, String)> = vec![];
 
     for (i, _) in data.iter().enumerate() {
         if i % 2 == 0 {
             let timestamp = last_day.timestamp() as u32 + i as u32 * 60 * 60;
-            let naive_dt = chrono::NaiveDateTime::from_timestamp_opt(timestamp as i64, 0)
-                .ok_or("Failed to convert timestamp")?;
+            let naive_dt = chrono::Utc.timestamp_opt(timestamp as i64, 0).unwrap().naive_utc();
             let localized_dt: DateTime<Tz> = timezone.from_utc_datetime(&naive_dt);
             let hour = localized_dt.format("%H").to_string();
             x_labels.push((i as u32, hour + ":00"));
@@ -130,9 +129,9 @@ async fn build_chart(
                 .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                 .ok_or("Failed to find the minimum value")?)
                 ..(*data
-                    .iter()
-                    .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
-                    .ok_or("Failed to find the maximum value")?),
+                .iter()
+                .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                .ok_or("Failed to find the maximum value")?),
         )?;
 
     chart

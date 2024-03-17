@@ -68,13 +68,4 @@ impl User {
         }
         Ok(())
     }
-
-    pub async fn update(&self, db: DatabaseManager) -> Result<(), Box<dyn Error>> {
-        let res = db.update_user(self.clone()).await;
-        match res {
-            Ok(_) => (),
-            Err(err) => debug!("update error {}", err),
-        }
-        Ok(())
-    }
 }

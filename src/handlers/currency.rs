@@ -101,8 +101,8 @@ async fn simple_commands_handler(
                     msg.chat.id,
                     "Type /chart [currency_name]\nExample: /chart btc",
                 )
-                .reply_to_message_id(msg.id)
-                .await?;
+                    .reply_to_message_id(msg.id)
+                    .await?;
                 return Ok(());
             }
             chart_command(bot.clone(), msg.clone(), currency).await;
@@ -122,8 +122,8 @@ async fn simple_commands_handler(
                     msg.chat.id,
                     "Type /addcurrency [currency_name]\nExample: /addcurrency btc",
                 )
-                .reply_to_message_id(msg.id)
-                .await?;
+                    .reply_to_message_id(msg.id)
+                    .await?;
                 return Ok(());
             }
             let result =
@@ -136,8 +136,8 @@ async fn simple_commands_handler(
                     msg.chat.id,
                     "Type /removecurrency [currency_name]\nExample: /removecurrency btc",
                 )
-                .reply_to_message_id(msg.id)
-                .await?;
+                    .reply_to_message_id(msg.id)
+                    .await?;
                 return Ok(());
             }
             let res =
@@ -168,7 +168,7 @@ async fn simple_commands_handler(
                 blockchain,
                 gas,
             )
-            .await;
+                .await;
             bot.send_message(msg.chat.id, result).await?;
         }
     };
@@ -225,7 +225,8 @@ async fn messages_handler(
         if res.len() <= 1 {
             return Ok(());
         }
-        bot.send_message(msg.chat.id, res).await?;
+        bot.send_message(msg.chat.id, res).reply_to_message_id(msg.id)
+            .await?;
     }
     Ok(())
 }
